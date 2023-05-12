@@ -14,10 +14,10 @@ valid_path = '/home/tobias/git_ws/pul/val/buffalo/'
 train_dataset, train_labels = get_data_set(train_path)
 valid_dataset, valid_labels = get_data_set(valid_path)
 
-plot_image_gallery(train_dataset, value_range=(0, 255))
+#plot_image_gallery(train_dataset["images"], value_range=(0, 255))
 
 
-resized = keras_cv.layers.Resizing(180, 180, bounding_box_format="xywh", pad_to_aspect_ratio=True)(train_dataset)
+# resized = keras_cv.layers.Resizing(180, 180, bounding_box_format="xywh", pad_to_aspect_ratio=True)(train_dataset)
 
 
 
@@ -53,8 +53,8 @@ callbacks = [
 # Train the model
 
 model.fit(
-    (train_dataset,
-    train_labels),
+    train_dataset,
+    #train_labels,
     # epochs=100,
     # callbacks=callbacks,
     # validation_data=(valid_dataset, valid_labels),

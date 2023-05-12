@@ -1,6 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import numpy as np
 from termcolor import colored
 from tqdm import tqdm
 import glob
@@ -27,12 +26,12 @@ def get_labels(data_dir):
             
         ]
     }
-    for name in glob.glob(data_dir + '*.txt'):
+    for name in tqdm(glob.glob(data_dir + '*.txt')):
         with open(name) as f:
             lines = f.readlines()
             classes_in_file =[]
             boxes_in_file = []
-            for line in tqdm(lines):
+            for line in lines:
                 line = line.split()
                 class_name = line[0]
                 x_min = line[1]
@@ -43,12 +42,22 @@ def get_labels(data_dir):
                 boxes_in_file.append([x_min, y_min, x_max, y_max])
             train_labels["classes"].append(classes_in_file)
             train_labels["boxes"].append(boxes_in_file)
+    return train_labels
 
 
 def get_data_set(data_dir):
     train_images = get_image_data(data_dir)
     train_labels = get_labels(data_dir)
-    return train_images, train_labels
+    #print(colored(train_labels, "red"))
+    train_dataset = {
+        "images": train_images,
+        "boundary_boxes": {
+            'boxes': train_labels["boxes"],
+            'classes': train_labels["classes"]
+        }
+    }
+    train_labels = train_labels["classes"]
+    return train_dataset, train_labels
 
 
 def get_image_data(data_dir):
@@ -67,7 +76,7 @@ def get_image_data(data_dir):
     train_ds.map(lambda x: (tf.cast(x, tf.float32)))
     train_images = np.zeros((1, img_height, img_width, 3))
 
-    print(colored(train_ds, "green"))
+    #print(colored(train_ds, "green"))
    
     for image_batch in tqdm(train_ds):
         image_batch = tf.expand_dims(image_batch, axis=0)
@@ -80,4 +89,4 @@ def get_image_data(data_dir):
 
 
 if __name__ == '__main__':
-    get_labels('/home/tobias/git_ws/pul/train/buffalo/')
+    print(colored(get_data_set('/home/tobias/git_ws/pul/train/buffalo/'), 'green'))
