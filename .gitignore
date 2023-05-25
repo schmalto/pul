@@ -163,3 +163,7 @@ val/
 train/
 logs/
 .logs/
+model_testing/
+image_conversion/
+example_set/
+datasets/
