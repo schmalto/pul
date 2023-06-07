@@ -167,3 +167,9 @@ model_testing/
 image_conversion/
 example_set/
 datasets/
+example_datasets/
+datasets/cars_trucks
+datasets/cars_trucks_patched
+datasets/truck_labeled
+**/*.pt
+**/*.pt
