@@ -159,14 +159,12 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-val/
-train/
+
 logs/
 .logs/
 model_testing/
 image_conversion/
 example_set/
-datasets/
 example_datasets/
 datasets/cars_trucks
 datasets/cars_trucks_patched

@@ -1,0 +1,7 @@
+names:
+- truck
+- car
+nc: 2
+path: ../datasets/truck_labeled_many_1080_1080
+train: images/train
+val: images/val
