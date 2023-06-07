@@ -25,15 +25,15 @@ def train_model(yaml_file='truck_labeled_patched/truck_labeled_patched.yaml', na
 
      # model.train(data="", epochs="")
     torch.cuda.empty_cache()
-    data_name = '/home/tobias/git_ws/pul/datasets/' + yaml_file
+    data_name = base_path + '/datasets/' + yaml_file
     train.run(data=data_name,imgsz=320, weights='yolov5l.pt', batch_size=2, epochs=300, project='./runs/', name=name_run)
 
 def analyze():
     torch.cuda.empty_cache()
     model = torch.hub.load('ultralytics/yolov5', 'custom',
-                            path='/home/tobias/git_ws/pul/runs/truck_labeled_many_1080_1080_local/weights/best.pt', force_reload=True)
+                            path= base_path + '/runs/truck_labeled_many_1080_1080_local/weights/best.pt', force_reload=True)
     model.eval()
-    folder = '/home/tobias/git_ws/pul/val_images/verpixelt'
+    folder = base_path + '/val_images/verpixelt'
     for file in os.listdir(folder):
         if file.startswith('_'):
             continue
@@ -41,8 +41,9 @@ def analyze():
         result.save()
 
 if __name__ == "__main__":
-    # train_model(yaml_file='truck_labeled_many_1080_1080/truck_labeled_many_1080_1080.yaml',
-    #              name_run='truck_labeled_many_1080_1080')
+    base_path = os.getcwd()
+    train_model(yaml_file='truck_labeled_many_1080_1080/truck_labeled_many_1080_1080.yaml',
+                  name_run='truck_labeled_many_1080_1080')
     # train_model(yaml_file='truck_labeled_many_960_960/truck_labeled_many_960_960.yaml', name_run='truck_labeled_many_960_960')
     # train_model(yaml_file='truck_labeled_many_640_640/truck_labeled_many_640_640.yaml',
     #             name_run='truck_labeled_many_640_640')
@@ -52,6 +53,6 @@ if __name__ == "__main__":
     #             name_run='truck_labeled_many_original')
 
 
-    analyze()
+    #analyze()
 
 
