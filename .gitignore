@@ -171,3 +171,6 @@ datasets/cars_trucks_patched
 datasets/truck_labeled
 **/*.pt
 **/*.pt
+runs/models/
+val_images/
+*.pt
