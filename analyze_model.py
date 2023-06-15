@@ -45,7 +45,7 @@ def analyze(val_folder='weniger', model_weigths='truck_labeled_many_960_960.pt',
     print(os.path.join(base_path, save_location))
     torch.cuda.empty_cache()
     model = torch.hub.load(base_model, 'custom',
-                            path= base_path + '/runs/' + model_weigths, force_reload=True)
+                            path= base_path + '/runs/models/' + model_weigths, force_reload=True)
     model.eval()
     df = pd.DataFrame()
     folder = base_path + '/val_images/' + val_folder
@@ -71,6 +71,6 @@ def analyze(val_folder='weniger', model_weigths='truck_labeled_many_960_960.pt',
 
 
 if __name__ == "__main__":
-    analyze('__original__', 'truck_labeled_many_original_320.pt', 'ultralytics/yolov5', 'runs/combined_images', original=True)
+    analyze('skysat_960_960', '960_960.pt', 'ultralytics/yolov5', 'runs/combined_images', original=True)
 
     
