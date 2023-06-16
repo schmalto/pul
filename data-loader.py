@@ -1,10 +1,12 @@
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
-from tensorflow.keras import optimizers
+#from tensorflow.keras import optimizers
 import keras_cv
 import numpy as np
+import keras
 from keras_cv import bounding_box
+from keras.preprocessing.image import ImageDataGenerator
 import os
 import resource
 from keras_cv import visualization
@@ -13,6 +15,7 @@ from pathlib import Path
 from os import listdir
 from os.path import isfile, join
 from termcolor import colored
+from pathlib import Path, PurePath
 
 
 
@@ -24,19 +27,36 @@ class_mapping = dict(zip(range(len(class_ids)), class_ids))
 
 
 
-BATCH_SIZE = 4
+BATCH_SIZE = 2
 
+
+# def load_images(root, train_or_val):
+#     image_dir = os.path.join(root, "images", train_or_val)
+#     image_paths = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
+#     image_arr = []
+#     for image_file in tqdm(image_paths):
+#         image = tf.keras.utils.load_pathlib.PurePathimg(os.path.join(image_dir,image_file))
+#         input_arr = tf.keras.utils.img_to_array(image)
+#         image_arr.append(tf.cast(input_arr, tf.float32))
+#     images = tf.convert_to_tensor(np.array(image_arr))
+#     return images
 
 def load_images(root, train_or_val):
     image_dir = os.path.join(root, "images", train_or_val)
     image_paths = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
+    
     image_arr = []
     for image_file in tqdm(image_paths):
-        image = tf.keras.utils.load_img(os.path.join(image_dir,image_file))
+        image = tf.keras.utils.load_img(os.path.join(image_dir, image_file))
         input_arr = tf.keras.utils.img_to_array(image)
-        image_arr.append(tf.cast(input_arr, tf.float32))
-    images = tf.convert_to_tensor(np.array(image_arr))
+        image_arr.append(input_arr)
+    
+    #images = tf.stack(image_arr)
+    images = np.stack(image_arr)
+    images = tf.cast(images, tf.float32)
+    
     return images
+
 
 def load_bounding_boxes(root, train_or_val):
     label_dir = os.path.join(root, "labels", train_or_val)
@@ -78,17 +98,30 @@ def convert_center_rel_xywh_to_rel_xywh(boxes):
 
 
 
-def load_dataset(yaml_path="data.yaml"):
-    yaml_path="/home/tobias/git_ws/pul/datasets/truck_labeled/truck_labeled.yaml"
+def load_data(yaml_path="data.yaml"):
+    #yaml_path="/home/tobias/git_ws/pul/datasets/truck_labeled/truck_labeled.yaml"
     root = os.path.dirname(os.path.realpath(yaml_path))
     val_labels = load_bounding_boxes(root, "val")
+    train_labels = load_bounding_boxes(root, "train")
+    train_images = load_images(root, "train")
     val_images = load_images(root, "val")
     val_ds = {
         "images": val_images,
         "bounding_boxes": val_labels,
     }
-    return val_ds
+    train_ds = {
+        "images": train_images,
+        "bounding_boxes": train_labels,
+    }
+    return train_ds,val_ds
 
+def make_dataset(data_dict):
+    dataset = tf.data.Dataset.from_tensor_slices(data_dict)
+    return dataset
+
+def save_dataset(dataset, path):
+    dataset.save(path)
+    return 1
     
 
 
@@ -110,17 +143,33 @@ def visualize_dataset(inputs, value_range, rows, cols, bounding_box_format):
     )
 
 def main():
-    train_ds = load_dataset()
-    train_ds = tf.data.Dataset.from_tensor_slices(train_ds)
+    
+
+    datasets = [
+        "datasets/truck_labeled_many_320_320/truck_labeled_many_320_320.yaml",
+        "datasets/truck_labeled_many_640_640/truck_labeled_many_640_640.yaml",
+        "datasets/truck_labeled_many_1080_1080/truck_labeled_many_1080_1080.yaml",
+        "datasets/truck_labeled_many_960_960/truck_labeled_many_960_960.yaml",
+    ]
+
+    for dataset in tqdm(datasets):
+        data_yaml_path = Path(dataset).resolve()
+        folder_name = PurePath(data_yaml_path)
+        data_save_path = os.path.join(os.getcwd(), "datasets/", "tf/", folder_name.parent.name)
+        ds = load_data(str(data_yaml_path))
+        train_ds = make_dataset(ds[0])
+        train_ds = train_ds.ragged_batch(BATCH_SIZE, drop_remainder=True)
+        train_ds = train_ds.batch(BATCH_SIZE)
+        eval_ds = make_dataset(ds[1])
+        eval_ds = eval_ds.ragged_batch(BATCH_SIZE, drop_remainder=True)
+        eval_ds = eval_ds.batch(BATCH_SIZE)
+        save_dataset(train_ds, os.path.join(data_save_path + "/train_ds"))
+        save_dataset(eval_ds, os.path.join(data_save_path + "/train_ds"))
 
 
-    train_ds = train_ds.ragged_batch(BATCH_SIZE, drop_remainder=True)
-    train_ds = train_ds.shuffle(BATCH_SIZE)
-
-
-    visualize_dataset(
-        train_ds, bounding_box_format="rel_xywh", value_range=(0, 255), rows=1, cols=1
-    )
+    # visualize_dataset(
+    #     train_ds, bounding_box_format="rel_xywh", value_range=(0, 255), rows=1, cols=1
+    # )
 
 
 if __name__ == "__main__":
