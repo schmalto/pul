@@ -17,6 +17,7 @@ def train_model(yaml_file='truck_labeled_patched/truck_labeled_patched.yaml', na
 
 if __name__ == "__main__":
     base_path = os.getcwd()
+    train.run(data="/home/tobias/git_ws/pul/example_datasets/example_yolo/example_yolo.yaml",imgsz=320, weights='yolov5m.pt', batch_size=2, epochs=300, project='./runs/', name="traffic_sign_detect")
     # train_model(yaml_file='truck_labeled_many_1080_1080/truck_labeled_many_1080_1080.yaml',
     #               name_run='truck_labeled_many_1080_1080')
     # train_model(yaml_file='truck_labeled_many_960_960/truck_labeled_many_960_960.yaml', name_run='truck_labeled_many_960_960')

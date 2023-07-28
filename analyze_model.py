@@ -4,7 +4,7 @@ from torchvision.utils import draw_bounding_boxes
 from PIL import Image
 import torchvision.transforms as transforms
 from torchvision.ops import box_convert
-from clean_folders import move_files_to_parent, combine_images
+from clean_folders import move_files_to_parent, combine_images, move_files_from_folder_to_folder
 import pandas as pd
 from termcolor import colored
 from pathlib import Path
@@ -42,7 +42,10 @@ def analyze(val_folder='weniger', model_weigths='truck_labeled_many_960_960.pt',
     base_path = os.getcwd()
     if not os.path.isdir(os.path.join(base_path , save_location)):
         Path(os.path.join(base_path, save_location)).mkdir(parents=True, exist_ok=True)
-    print(os.path.join(base_path, save_location))
+    if not os.path.isdir(os.path.join(base_path , save_location, 'images/')):
+        Path(os.path.join(base_path, save_location, 'images/')).mkdir(parents=True, exist_ok=True)
+    if not os.path.isdir(os.path.join(base_path , save_location, 'labels/')):
+        Path(os.path.join(base_path, save_location, 'labels/')).mkdir(parents=True, exist_ok=True)
     torch.cuda.empty_cache()
     model = torch.hub.load(base_model, 'custom',
                             path= base_path + '/runs/models/' + model_weigths, force_reload=True)
@@ -53,24 +56,34 @@ def analyze(val_folder='weniger', model_weigths='truck_labeled_many_960_960.pt',
         if file.startswith('_'):
             continue
         result = model(folder + '/' + file)
-        df = pd.concat([df,result.pandas().xyxy[0]])
+        df = result.pandas().xyxy[0]
+        cars = len(df.loc[df['name'] == 'car'])
+        trucks = len(df.loc[df['name'] == 'truck'])
+        #print(colored('trucks: ' + str(trucks) + "\n" + 'cars: ' + str(cars), 'red'))
+        with open(os.path.join(base_path, save_location, 'labels/' ,file.replace('.png', '.txt')), 'w') as f:
+            f.write('Cars: ' + str(cars) + '\n')
+            f.write('Trucks: ' + str(trucks) + '\n')
         result.save()
     print("[Analyze] Ran interference.")
    
     move_files_to_parent(base_path + '/runs/detect')
+    move_files_from_folder_to_folder(base_path + '/runs/detect', base_path + '/' + save_location + '/images')
+
     print("[Analyze] Moved all files to parent folder.")
     if not original:
-        save_count(df, os.path.join(base_path, save_location))
+        #save_count(df, os.path.join(base_path, save_location))
         print("[Analyze] Counted all class occurence.")
         combine_images(base_path + '/runs/detect', save_location)
         print("[Analyze] Combined all images.")
     else:
-        save_count(df, os.path.join(base_path, 'runs/detect'))
+        #save_count(df, os.path.join(base_path, 'runs/detect'))
         print("[Analyze] Counted all class occurence.")
     print("[Analyze] Done.")
 
 
 if __name__ == "__main__":
-    analyze('skysat_960_960', '960_960.pt', 'ultralytics/yolov5', 'runs/combined_images', original=True)
+    # for folder in [ f.path for f in os.scandir("/home/tobias/git_ws/pul/val_images/zeitreihe/") if f.is_dir() ]:
+    #     analyze(val_folder=folder.split('/')[-1], model_weigths='skysat_more_train_data.pt', base_model='ultralytics/yolov5', save_location='runs/zeitreihe' + folder.split('/')[-1], original=True)
+    analyze(val_folder='brunngras', model_weigths='skysat_more_train_data.pt', base_model='ultralytics/yolov5', save_location='runs/debug', original=True)
 
     

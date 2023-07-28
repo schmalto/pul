@@ -174,3 +174,5 @@ datasets/truck_labeled
 runs/models/
 val_images/
 *.pt
+datasets/
+runs/

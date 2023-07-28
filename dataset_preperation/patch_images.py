@@ -26,8 +26,8 @@ class Patcher:
         self,
         img: np.ndarray,
         fname: str,
-        patch_width: int = 1080,
-        patch_height: int = 1080,
+        patch_width: int = 960,
+        patch_height: int = 960,
     ) -> None:
 
         # Get image size and stop if it's smaller than patch size
@@ -125,11 +125,11 @@ def main():
     '''
 
     base_path = Path(
-        "/home/tobias/git_ws/pul/data_generation_test/datasets/truck_labeled_many")
+        "/home/tobias/git_ws/pul/datasets/skysat")
 
     # path were you want to save patched dataset
     path_to_save = Path(
-        "/home/tobias/git_ws/pul/data_generation_test/datasets/truck_labeled_many_1080_1080")
+        "/home/tobias/git_ws/pul/datasets/skysat_960_960")
 
     
 

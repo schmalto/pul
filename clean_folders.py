@@ -16,6 +16,11 @@ def get_subfolders(folder):
 def get_files(folder):
     return [os.path.join(folder, fn) for fn in next(os.walk(folder))[2]]
 
+def move_files_from_folder_to_folder(source, destination):
+    files = get_files(source)
+    for file in files:
+        shutil.move(file, destination)
+
 
 def move_files_to_parent(folder):
         for folder in get_subfolders(folder):
@@ -24,8 +29,7 @@ def move_files_to_parent(folder):
             try:
                 os.rmdir(folder)
             except Exception as e:
-                print("Error: %s : %s" % (folder, e.strerror))
-
+                pass
 
 def get_image_names(folder):
     folder = "/home/tobias/git_ws/pul/runs/detect"
