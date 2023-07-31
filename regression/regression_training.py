@@ -20,7 +20,7 @@ def datetime_to_float_ms(dt):
 daten = []
 lorry_free_values = []
 
-with open("bw_data_timeseries.csv", "r") as csvfile:
+with open("./regression/bw_data_timeseries.csv", "r") as csvfile:
     csvreader = csv.DictReader(csvfile, delimiter=";")
     for row in csvreader:
         datum_str = row["Uhrzeit"]
@@ -68,13 +68,16 @@ history = model.fit(x_train, y_train, epochs=10000, batch_size=16, validation_da
 test_loss = model.evaluate(x_test, y_test)
 print("Test Loss:", test_loss)
 
+with open('./runs/regression.txt', 'w') as f:
+    f.write(str(history.history['loss']) + "\n\n val_los: \n" + str(history.history['val_loss']))
+    
 # Plotten des Verlaufs von Trainings- und Validierungsverlust (Loss)
-plt.plot(history.history['loss'], label='Training Loss')
-plt.plot(history.history['val_loss'], label='Validation Loss')
-plt.xlabel('Epochen')
-plt.ylabel('Loss')
-plt.legend()
-plt.show()
+#plt.plot(history.history['loss'], label='Training Loss')
+#plt.plot(history.history['val_loss'], label='Validation Loss')
+#plt.xlabel('Epochen')
+#plt.ylabel('Loss')
+#plt.legend()
+#plt.show()
 
 # Speichern des trainierten Modells
 model.save('regression.keras')
