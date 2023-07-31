@@ -1,7 +1,0 @@
-names:
-- truck
-- car
-nc: 2
-path: ../datasets/truck_labeled_many
-train: images/train
-val: images/val

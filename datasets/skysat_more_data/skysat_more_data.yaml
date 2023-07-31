@@ -1,0 +1,7 @@
+names:
+- truck
+nc: 2
+path: ../datasets/training_skysat
+train: images/train
+val: images/val
+test: images/test

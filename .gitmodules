@@ -1,3 +1,6 @@
 [submodule "yolov5"]
 	path = yolov5
 	url = https://github.com/ultralytics/yolov5.git
+[submodule "datasets"]
+	path = datasets
+	url = https://github.com/B4ldur-ts/datasets.git

@@ -8,6 +8,8 @@ from clean_folders import move_files_to_parent, combine_images, move_files_from_
 import pandas as pd
 from termcolor import colored
 from pathlib import Path
+from ultralytics import YOLO
+#from yolov5.utils.general import strip_optimizer
 
 
 def visualize():
@@ -47,10 +49,17 @@ def analyze(val_folder='weniger', model_weigths='truck_labeled_many_960_960.pt',
     if not os.path.isdir(os.path.join(base_path , save_location, 'labels/')):
         Path(os.path.join(base_path, save_location, 'labels/')).mkdir(parents=True, exist_ok=True)
     torch.cuda.empty_cache()
+
+
+    #model = YOLO('yolov5x.pt')
+    #model = YOLO(base_path + '/runs/models/' + model_weigths)
+    #strip_optimizer(base_path + '/models/' + model_weigths)
     model = torch.hub.load(base_model, 'custom',
-                            path= base_path + '/runs/models/' + model_weigths, force_reload=True)
+                             path= base_path + '/models/' + model_weigths, force_reload=True)
     model.eval()
     df = pd.DataFrame()
+    file_list = []
+    trucks_counted = []
     folder = base_path + '/val_images/' + val_folder
     for file in os.listdir(folder):
         if file.startswith('_'):
@@ -64,6 +73,11 @@ def analyze(val_folder='weniger', model_weigths='truck_labeled_many_960_960.pt',
             f.write('Cars: ' + str(cars) + '\n')
             f.write('Trucks: ' + str(trucks) + '\n')
         result.save()
+        file_list.append(file)
+        trucks_counted.append(trucks)
+    with open(os.path.join(base_path, save_location, 'total_count.txt'), 'w') as f:
+        for i in range(len(file_list)):
+            f.write(file_list[i] + ': ' + str(trucks_counted[i]) + '\n')
     print("[Analyze] Ran interference.")
    
     move_files_to_parent(base_path + '/runs/detect')
@@ -84,6 +98,6 @@ def analyze(val_folder='weniger', model_weigths='truck_labeled_many_960_960.pt',
 if __name__ == "__main__":
     # for folder in [ f.path for f in os.scandir("/home/tobias/git_ws/pul/val_images/zeitreihe/") if f.is_dir() ]:
     #     analyze(val_folder=folder.split('/')[-1], model_weigths='skysat_more_train_data.pt', base_model='ultralytics/yolov5', save_location='runs/zeitreihe' + folder.split('/')[-1], original=True)
-    analyze(val_folder='brunngras', model_weigths='skysat_more_train_data.pt', base_model='ultralytics/yolov5', save_location='runs/debug', original=True)
+    analyze(val_folder='skysat_full', model_weigths='skysat_overfitted.pt', base_model='ultralytics/yolov5', save_location='runs/skysat_even_more_data_overfitted', original=True)
 
     

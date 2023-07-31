@@ -1,0 +1,6 @@
+names:
+- Car
+nc: 1
+path: ../datasets/skysat_960_960
+train: images/train
+val: images/val
