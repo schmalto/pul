@@ -56,7 +56,7 @@ optimizer = keras.optimizers.Adam(learning_rate=0.002)
 model.compile(optimizer=optimizer, loss='mean_squared_error')
 
 # EarlyStopping Callback
-early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
+early_stopping = EarlyStopping(monitor='val_loss', patience=3000, restore_best_weights=True)
 
 # Visualisieren der Architektur und Speichern als PNG-Datei
 #plot_model(model, to_file='modell_architektur.png', show_shapes=True)
@@ -80,7 +80,7 @@ with open('./runs/regression.txt', 'w') as f:
 #plt.show()
 
 # Speichern des trainierten Modells
-model.save('regression.keras')
+model.save('regression_overfitted.keras')
 
 # Vorhersage für neue Daten (Beispiel: Zeitstempel für 10:31 Uhr)
 #neuer_zeitstempel = datetime_to_float_ms(datetime(2023, 7, 26, 10, 31))
