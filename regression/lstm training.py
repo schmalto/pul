@@ -37,8 +37,16 @@ with open("x_gfild.CSV", "r") as csvfile:
 
 # Normalisierung des Zeitstempels basierend auf dem Trainingsdatensatz
 # Umwandlung der Daten in numpy-Arrays
-x_werte = np.array(daten)
-y_werte = np.array(lorry_free_values)
+#x_werte = np.array(daten)
+#y_werte = np.array(lorry_free_values)
+
+from loader import load_csv_data_regression
+
+dataset = load_csv_data_regression()
+
+x_werte = np.array(dataset["time"])
+y_werte = np.array(dataset["free"])
+
 
 # Normalisierung der Eingabedaten
 x_min = np.min(x_werte)
@@ -77,7 +85,9 @@ early_stopping = keras.callbacks.EarlyStopping(patience=5, restore_best_weights=
 
 
 # Training des Modells
-model.fit(sequences, labels, epochs=50, batch_size=32, callbacks=[early_stopping])
+#model.fit(sequences, labels, epochs=50, batch_size=32, callbacks=[early_stopping])
+
+model.fit(sequences, labels, epochs=50, batch_size=4, callbacks=[early_stopping])
 
 model.save('lstm.krs')
 # Vorhersagen für die Woche
