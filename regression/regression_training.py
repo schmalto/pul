@@ -20,7 +20,7 @@ def datetime_to_float_ms(dt):
 daten = []
 lorry_free_values = []
 
-with open("bw_data_timeseries.csv", "r") as csvfile:
+with open("./regression/bw_data_timeseries.csv", "r") as csvfile:
     csvreader = csv.DictReader(csvfile, delimiter=";")
     for row in csvreader:
         datum_str = row["Uhrzeit"]
@@ -56,7 +56,7 @@ optimizer = keras.optimizers.Adam(learning_rate=0.002)
 model.compile(optimizer=optimizer, loss='mean_squared_error')
 
 # EarlyStopping Callback
-early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
+early_stopping = EarlyStopping(monitor='val_loss', patience=3000, restore_best_weights=True)
 
 # Visualisieren der Architektur und Speichern als PNG-Datei
 #plot_model(model, to_file='modell_architektur.png', show_shapes=True)
@@ -68,16 +68,19 @@ history = model.fit(x_train, y_train, epochs=10000, batch_size=16, validation_da
 test_loss = model.evaluate(x_test, y_test)
 print("Test Loss:", test_loss)
 
+with open('./runs/regression.txt', 'w') as f:
+    f.write(str(history.history['loss']) + "\n\n val_los: \n" + str(history.history['val_loss']))
+    
 # Plotten des Verlaufs von Trainings- und Validierungsverlust (Loss)
-plt.plot(history.history['loss'], label='Training Loss')
-plt.plot(history.history['val_loss'], label='Validation Loss')
-plt.xlabel('Epochen')
-plt.ylabel('Loss')
-plt.legend()
-plt.show()
+#plt.plot(history.history['loss'], label='Training Loss')
+#plt.plot(history.history['val_loss'], label='Validation Loss')
+#plt.xlabel('Epochen')
+#plt.ylabel('Loss')
+#plt.legend()
+#plt.show()
 
 # Speichern des trainierten Modells
-model.save('regression.keras')
+model.save('regression_overfitted.keras')
 
 # Vorhersage für neue Daten (Beispiel: Zeitstempel für 10:31 Uhr)
 #neuer_zeitstempel = datetime_to_float_ms(datetime(2023, 7, 26, 10, 31))

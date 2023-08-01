@@ -1,2 +1,0 @@
-Cars: 482
-Trucks: 735

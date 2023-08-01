@@ -1,2 +1,0 @@
-Cars: 31
-Trucks: 1
