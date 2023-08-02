@@ -98,6 +98,6 @@ def analyze(val_folder='weniger', model_weigths='truck_labeled_many_960_960.pt',
 if __name__ == "__main__":
     # for folder in [ f.path for f in os.scandir("/home/tobias/git_ws/pul/val_images/zeitreihe/") if f.is_dir() ]:
     #     analyze(val_folder=folder.split('/')[-1], model_weigths='skysat_more_train_data.pt', base_model='ultralytics/yolov5', save_location='runs/zeitreihe' + folder.split('/')[-1], original=True)
-    analyze(val_folder='skysat_full', model_weigths='google_skysat_overfitted.pt', base_model='ultralytics/yolov5', save_location='runs/google_skysat_overfitted', original=True)
+    analyze(val_folder='skysat_full', model_weigths='skysat_google_L_model.pt', base_model='ultralytics/yolov5', save_location='runs/skysat_google_L_model', original=True)
 
     
