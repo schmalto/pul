@@ -11,7 +11,7 @@ if [ $EUID != 0 ]; then
 fi
 
 
-echo -e "${LIGHT_CYAN}[Setup]${NC} Installing Github CLI"
+echo "${LIGHT_CYAN}[Setup]${NC} Installing Github CLI"
 
 type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
 curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
@@ -20,10 +20,10 @@ curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo 
 && sudo apt update \
 && sudo apt install gh -y
 
-echo -e "${LIGHT_CYAN}[Setup]${NC} Installed Github CLI"
-echo -e "${LIGHT_CYAN}[Setup]${NC} Installing Ultralytics"
+echo "${LIGHT_CYAN}[Setup]${NC} Installed Github CLI"
+echo "${LIGHT_CYAN}[Setup]${NC} Installing Ultralytics"
 pip install ultralytics
-echo -e "${LIGHT_CYAN}[Setup]${NC} Installed Ultralytics"
-echo -e "${LIGHT_CYAN}[Setup]${NC} Installing Albumentations"
+echo "${LIGHT_CYAN}[Setup]${NC} Installed Ultralytics"
+echo "${LIGHT_CYAN}[Setup]${NC} Installing Albumentations"
 pip install albumentations
-echo -e "${LIGHT_CYAN}[Setup]${NC} Installed Albumentations"
+echo "${LIGHT_CYAN}[Setup]${NC} Installed Albumentations"
