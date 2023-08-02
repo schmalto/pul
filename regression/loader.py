@@ -65,7 +65,7 @@ def load_csv_data_lstm(filepath="x_gfild.CSV"):
 
     return sequences, labels, x_min, x_max
 '''
-def load_csv_data_regression(filepath="/home/tobias/git_ws/pul/regression/x_gfild.CSV"):
+def load_csv_data_regression(filepath="x_gfild.CSV"):
     daten = []
     lorry_free_values = []
 

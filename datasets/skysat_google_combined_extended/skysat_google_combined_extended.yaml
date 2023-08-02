@@ -1,0 +1,8 @@
+names:
+- truck
+- car
+nc: 2
+path: ../datasets/skysat_google_combined_extended
+train: images/train
+val: images/val
+test: images/test
