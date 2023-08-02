@@ -70,6 +70,9 @@ labels = np.array(labels)
 # Umwandlung in die richtige Form (None, 10, 1)
 sequences = np.expand_dims(sequences, axis=2)
 
+print("Sequenzen:", sequences.shape)
+print("Labels:", labels.shape)
+
 # Verbesserte RNN-Architektur mit LSTM und tanh-Aktivierungsfunktion
 model = keras.Sequential([
     keras.layers.LSTM(64, activation='tanh', input_shape=(sequence_length, 1), return_sequences=True),

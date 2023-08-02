@@ -73,27 +73,36 @@ test_labels = test_features.pop('free')
 train_features = train_features['time']
 test_features = test_features['time']
 
+train_features = np.array(train_features)
+test_features = np.array(test_features)
+train_labels = np.array(train_labels)
+test_labels = np.array(test_labels)
+
 train_features = normalize(train_features)
 test_features = normalize(test_features)
 train_labels = normalize(train_labels)
 test_labels = normalize(test_labels)
 
 
+
 # Erstellen der Sequenzen
 train_features, train_labels = create_sequences(train_features, train_labels, time_steps)
 test_features, test_labels = create_sequences(test_features, test_labels, time_steps)
+train_features = np.expand_dims(train_features, axis=2)
+test_features = np.expand_dims(test_features, axis=2)
 
-
+print("features: ", train_features.shape)
+print("Labels: ", train_labels.shape)
 # sns.pairplot(train_dataset[['time', 'free']], diag_kind='kde')
 # plt.show()
 
 
 
 model_lstm = keras.Sequential([
-    keras.layers.LSTM(64, input_shape=(time_steps, 1)),  # Use LSTM layer for time series modeling
-    keras.layers.LSTM(64, input_shape=(time_steps, 1)),  # Use LSTM layer for time series modeling
-    keras.layers.LSTM(64, input_shape=(time_steps, 1)),  # Use LSTM layer for time series modeling
-    keras.layers.LSTM(64, input_shape=(time_steps, 1)),  # Use LSTM layer for time series modeling
+    keras.layers.LSTM(64, input_shape=(time_steps, 1),return_sequences=True),  # Use LSTM layer for time series modeling
+    keras.layers.LSTM(64, input_shape=(time_steps, 1),return_sequences=True),  # Use LSTM layer for time series modeling
+    keras.layers.LSTM(64, input_shape=(time_steps, 1), return_sequences=True),  # Use LSTM layer for time series modeling
+    keras.layers.LSTM(64, input_shape=(time_steps, 1), return_sequences=True),  # Use LSTM layer for time series modeling
     keras.layers.Dense(1)
 ])
 
@@ -104,15 +113,16 @@ model_gru = keras.Sequential([
 ])
 
 model_gru_deeper = keras.Sequential([
-    keras.layers.GRU(64, input_shape=(time_steps, 1)),  # Use LSTM layer for time series modeling
-    keras.layers.GRU(64, input_shape=(time_steps, 1)),  # Use LSTM layer for time series modeling
-    keras.layers.GRU(64, input_shape=(time_steps, 1)),  # Use LSTM layer for time series modeling
-    keras.layer.Dense(1)
+    keras.layers.GRU(64, input_shape=(time_steps, 1),return_sequences=True),  # Use LSTM layer for time series modeling
+    keras.layers.GRU(64, input_shape=(time_steps, 1),return_sequences=True),  # Use LSTM layer for time series modeling
+    keras.layers.GRU(64, input_shape=(time_steps, 1),return_sequences=True),  # Use LSTM layer for time series modeling
+    keras.layers.Dense(1)
 ])
 
 model_lstm_gru = keras.Sequential([
-    keras.layers.LSTM(64, input_shape=(time_steps, 1), return_sequences=True),  # Use LSTM layer for time series modeling
-    keras.layers.GRU(64, input_shape=(time_steps, 1)),  # Use LSTM layer for time series modeling
+    keras.layers.LSTM(64, activation='selu', input_shape=(time_steps, 1), return_sequences=True),
+    keras.layers.GRU(64, activation='selu', input_shape=(time_steps, 1), return_sequences=True),
+    keras.layers.GRU(64, activation='selu', input_shape=(time_steps, 1), return_sequences=True),
     keras.layers.Dense(1)
 ])
 
@@ -129,6 +139,7 @@ model.compile(
 history = model.fit(
     train_features,
     train_labels,
+    batch_size=4,
     epochs=10,
     # Suppress logging.
     verbose=1,
