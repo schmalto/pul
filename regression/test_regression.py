@@ -38,7 +38,8 @@ def plot_pred(x, y):
   plt.xlabel('time')
   plt.ylabel('free')
   plt.legend()
-  plt.show()
+  #plt.show()
+  plt.savefig('test_pred.png')
 
 def generate_time_stamp():
     dates = []
