@@ -150,7 +150,7 @@ def fit(model, optimizer, criterion):
         test_losses.append(np.mean(test_epoch_loss))
 
     # Save the trained model
-    torch.save(model.state_dict(), 'vanilla_lstm_bw.pth')
+    torch.save(model.state_dict(), 'stacked_bidirectional_lstm_bw.pth')
 
 
 # device = torch.device(type='cuda')
@@ -160,7 +160,12 @@ hidden_dim = 64
 epochs = 5
 
 # vanilla LSTM
-model = DenseLSTM(window_size, hidden_dim, lstm_layers=1, bidirectional=False, dense=False)
+#model = DenseLSTM(window_size, hidden_dim, lstm_layers=1, bidirectional=False, dense=False)
+# Stacked Bidirectional LSTMs with a fully-connected layer:
+
+model = DenseLSTM(window_size, hidden_dim, lstm_layers=2, bidirectional=True, dense=True)
+
+
 model.to(device)
 
 # define optimizer and loss function
@@ -191,7 +196,7 @@ plt.plot(pd.Series(scaler.inverse_transform(preds.reshape(-1, 1))[:, 0], index=t
          label='test predictions')
 plt.xlabel('Date time')
 plt.ylabel('Lorry free')
-plt.title('Vanilla LSTM Forecasts')
+plt.title('Stacked bidirectional LSTM Forecasts')
 plt.legend()
 plt.show()
 
@@ -207,36 +212,4 @@ plt.ylabel('Loss')
 plt.legend()
 plt.show()
 
-# Disable grad
-with torch.no_grad():
-    # Set the model to evaluation mode
-    model.eval()
 
-    # Define the input date and time
-    input_date_time = "08.08.2023 15:31"
-
-    # Convert the input date and time to a datetime object
-    input_data = pd.to_datetime(input_date_time, format='%d.%m.%Y %H:%M')
-
-    # Extract day, month, year, hour, and minute from the datetime object
-    day = input_data.day
-    month = input_data.month
-    year = input_data.year
-    hour = input_data.hour
-    minute = input_data.minute
-
-    # Create the input data as a 2D tensor with numerical features
-    input_data = torch.tensor([[day, month, year, hour, minute]], dtype=torch.float32)
-
-    # Pad the input tensor with zeros to match the expected input size of 100
-    padded_input = torch.zeros((1, 100, input_data.shape[-1]))
-    padded_input[:, -input_data.shape[1]:, :] = input_data
-
-    # Reshape the padded input tensor to remove the batch dimension
-    reshaped_input = padded_input.squeeze(0)
-
-    # Make predictions using the model
-    predictions = model(reshaped_input)
-
-    # Print the predictions
-    print(predictions)
