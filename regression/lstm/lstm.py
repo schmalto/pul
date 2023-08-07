@@ -2,16 +2,20 @@ import torch
 from torch import nn
 import numpy as np
 import time
+import os
+from termcolor import colored
 
 
 class DenseLSTM(nn.Module):
-    def __init__(self, input_dim, hidden_dim, lstm_layers=1, bidirectional=False, dense=False):
+    def __init__(self, device ,input_dim, hidden_dim, lstm_layers=1, bidirectional=False, dense=False, name='dense_lstm'):
         super(DenseLSTM, self).__init__()
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.layers = lstm_layers
         self.bidirectional = bidirectional
         self.dense = dense
+        self.name = name
+        self.device = device
         # define the LSTM layer
         self.lstm = nn.LSTM(input_size=self.input_dim,
                             hidden_size=self.hidden_dim,
@@ -29,6 +33,11 @@ class DenseLSTM(nn.Module):
             self.final = nn.Linear(self.hidden_dim * 2, 1)
         else:
             self.final = nn.Linear(self.hidden_dim, 1)
+        os.makedirs(os.path.join('models/' + self.name), exist_ok=True)
+
+    def save_losses(self, train_losses, test_losses):
+        np.save('models/'+ self.name +'/train_losses.npy', train_losses)
+        np.save('models/'+ self.name + '/test_losses.npy', test_losses)
 
     def forward(self, inputs, labels=None):
         out = inputs.unsqueeze(1)
@@ -39,6 +48,9 @@ class DenseLSTM(nn.Module):
             out = self.act2(out)
         out = self.final(out)
         return out
+    
+    def save(self, name):
+        torch.save(self.state_dict(), 'models/'+ self.name + '/' + name)
     
     def fit(self, optimizer, criterion, epochs, train_dataloader, test_dataloader):
         print("{:<8} {:<25} {:<25} {:<25}".format('Epoch',
@@ -57,9 +69,10 @@ class DenseLSTM(nn.Module):
                 self.zero_grad()
                 inputs, labels = batch
                 # get predictions
-                out = self(inputs)
+                out = self(inputs.to(self.device))
+                out = np.squeeze(out)
                 # get loss
-                loss = criterion(out, labels)
+                loss = criterion(out.to(self.device), labels.to(self.device))
                 epoch_loss.append(loss.float().detach().cpu().numpy().mean())
                 # backpropagate
                 loss.backward()
@@ -71,16 +84,19 @@ class DenseLSTM(nn.Module):
             for step, batch in enumerate(test_dataloader):
                 inputs, labels = batch
                 # get predictions
-                out = self(inputs)
+                out = self(inputs.to(self.device))
                 # get loss
-                loss = criterion(out, labels)
+                loss = criterion(out.to(self.device), labels.to(self.device))
                 test_epoch_loss.append(loss.float().detach().cpu().numpy().mean())
             print("{:<8} {:<25} {:<25} {:<25}".format(epoch + 1,
                                                     np.mean(epoch_loss),
                                                     np.mean(test_epoch_loss),
                                                     end - start))
-
+            if np.mean(test_epoch_loss) < min(test_losses, default=np.inf):
+                self.save('best.pt')
             # Save the losses for plotting
             train_losses.append(np.mean(epoch_loss))
             test_losses.append(np.mean(test_epoch_loss))
+            self.save_losses(train_losses, test_losses)
+        self.save('final.pt')
         return train_losses, test_losses

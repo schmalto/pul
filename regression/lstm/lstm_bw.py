@@ -12,8 +12,6 @@ if torch.cuda.is_available():
 else:
     device = torch.device(type='cpu')
 
-TRAINING = True
-
 
 # function for generating the lagged matrix
 def split_sequence(sequence, window_size):
@@ -31,20 +29,19 @@ def split_sequence(sequence, window_size):
         y.append(seq_y)
     return np.array(X), np.array(y)
 
-def load_data(p_window_size=100):
+def load_data(p_window_size=24):
 
     window_size = p_window_size
     
-    df = pd.read_csv('/home/tobias/git_ws/pul/regression/lstm/lorry_data.csv')
+    df = pd.read_csv('lorry_data.csv')
     time_vals = pd.to_datetime(df.pop('Date Time'), format='%d.%m.%Y %H:%M')
     series = df['lorry_free'][0::1]
     series.index = time_vals[0::1]
 
 
     train = series[:-int(len(series) / 10)]
-    test = series[-int(# device = torch.device(type='cuda')
-len(series) / 10):]
-    #X_train, y_train = split_sequence(train, window_size=24)
+    test = series[-int(len(series) / 10):]
+    X_train, y_train = split_sequence(train, window_size=window_size)
 
     # train test split
     train = series[:-int(len(series) / 10)]
@@ -82,69 +79,82 @@ def scale(arr):
     return (max_scale - min_scale) * (arr - min) / (max - min) + min_scale
 
 
+def model_training(device,p_hidden_dim=64, p_epochs=200, p_window_size=24, p_batch_size=32):
 
-train_data, test_data, window_size , train, test, y_train, y_test, scaler= load_data()
-# get data loaders
-batch_size = 32
-train_dataloader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
-test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
+    hidden_dim = p_hidden_dim
+    epochs = p_epochs
+    window_size = p_window_size
+    batch_size = p_batch_size
+
+    train_data, test_data, window_size , train, test, y_train, y_test, scaler= load_data()
+    # get data loaders
+    train_dataloader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
+    test_dataloader = DataLoader(test_data, shuffle=False, batch_size=batch_size)
 
 
-train_losses = []
-test_losses = []
+    train_losses = []
+    test_losses = []
 
-hidden_dim = 64
-epochs = 200
+    hidden_dim = hidden_dim
+    epochs = epochs
 
-# vanilla LSTM
-model = DenseLSTM(window_size, hidden_dim, lstm_layers=2, bidirectional=True, dense=True)
-model.to(device)
+    # vanilla LSTM
+    model = DenseLSTM(device,window_size, hidden_dim, lstm_layers=2, bidirectional=True, dense=True)
+    model.to(device)
 
-# define optimizer and loss function
-optimizer = torch.optim.Adam(model.parameters())
-criterion = nn.MSELoss()
+    # define optimizer and loss function
+    optimizer = torch.optim.Adam(model.parameters())
+    criterion = nn.MSELoss()
 
-# initate training
-if TRAINING:
+    # initate training
     train_losses, test_losses = model.fit(optimizer, criterion, epochs=epochs, train_dataloader=train_dataloader,test_dataloader=test_dataloader)
-    torch.save(model.state_dict(), 'dense_birectional_lstm.pth')
-#torch.load('vanilla_lstm_bw.pth')
+    #torch.load('vanilla_lstm_bw.pth')
 
-# get predictions on validation set
-model.eval()
-preds = []
-for step, batch in enumerate(test_dataloader):
-    batch = tuple(t.to(device) for t in batch)
-    inputs, labels = batch
-    out = model(inputs)
-    preds.append(out)
+    # get predictions on validation set
+    model.eval()
+    preds = []
+    for step, batch in enumerate(test_dataloader):
+        batch = tuple(t.to(device) for t in batch)
+        inputs, labels = batch
+        out = model(inputs)
+        preds.append(out)
 
-preds = [x.float().detach().cpu().numpy() for x in preds]
-preds = np.array([y for x in preds for y in x])
+    preds = [x.float().detach().cpu().numpy() for x in preds]
+    preds = np.array([y for x in preds for y in x])
 
-# plot data and predictions and applying inverse scaling on the data
-plt.plot(pd.Series(scaler.inverse_transform(y_train.float().detach().cpu().numpy().reshape(-1, 1))[:, 0],
-                   index=train[window_size:].index), label='train values')
-plt.plot(pd.Series(scaler.inverse_transform(y_test.float().detach().cpu().numpy().reshape(-1, 1))[:, 0],
-                   index=test[:-window_size].index), label='test values')
-plt.plot(pd.Series(scaler.inverse_transform(preds.reshape(-1, 1))[:, 0], index=test[:-window_size].index),
-         label='test predictions')
-plt.xlabel('Date time')
-plt.ylabel('Lorry free')
-plt.title('Vanilla LSTM Forecasts')
-plt.legend()
-plt.savefig('validation.png')
+    # plot data and predictions and applying inverse scaling on the data
+    plt.plot(pd.Series(scaler.inverse_transform(y_train.float().detach().cpu().numpy().reshape(-1, 1))[:, 0],
+                    index=train[window_size:].index), label='train values')
+    plt.plot(pd.Series(scaler.inverse_transform(y_test.float().detach().cpu().numpy().reshape(-1, 1))[:, 0],
+                    index=test[:-window_size].index), label='test values')
+    plt.plot(pd.Series(scaler.inverse_transform(preds.reshape(-1, 1))[:, 0], index=test[:-window_size].index),
+            label='test predictions')
+    plt.xlabel('Date time')
+    plt.ylabel('Lorry free')
+    plt.title('Vanilla LSTM Forecasts')
+    plt.legend()
+    plt.savefig('validation.png')
 
 
-# plot training loss
+    # plot training loss
 
-# Plot the training and validation losses
-plt.figure()
-epochs_list = range(1, epochs + 1)
-plt.plot(epochs_list, train_losses, label='Train Loss')
-plt.plot(epochs_list, test_losses, label='Test Loss')
-plt.xlabel('Epochs')
-plt.ylabel('Loss')
-plt.legend()
-plt.savefig('loss.png')
+    # Plot the training and validation losses
+    plt.figure()
+    epochs_list = range(1, epochs + 1)
+    plt.plot(epochs_list, train_losses, label='Train Loss')
+    plt.plot(epochs_list, test_losses, label='Test Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.savefig('loss.png')
+
+
+if __name__ == '__main__':
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+        print("[LSTM] Using Cuda")
+    else:
+        device = torch.device('cpu')
+        print("[LSTM] Using CPU")
+    model_training(device, p_hidden_dim=64, p_epochs=1, p_window_size=24, p_batch_size=32)
 
