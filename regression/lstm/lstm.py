@@ -98,5 +98,6 @@ class DenseLSTM(nn.Module):
             train_losses.append(np.mean(epoch_loss))
             test_losses.append(np.mean(test_epoch_loss))
             self.save_losses(train_losses, test_losses)
-        self.save('final.pt')
+            self.save('last.pt')
+
         return train_losses, test_losses
