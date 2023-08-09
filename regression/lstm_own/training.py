@@ -11,7 +11,7 @@ from lstm_utils import weeks, days, hours, months
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-lookback = days(1)
+lookback = hours(3)
 hidden_dim = 64
 num_layers = 2
 bidirectional = True
