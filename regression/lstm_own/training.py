@@ -11,12 +11,13 @@ from lstm_utils import weeks, days, hours, months
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-lookback = weeks(1)
+lookback = days(1)
 hidden_dim = 64
 num_layers = 2
 bidirectional = True
 dense = True
 input_dim = 1
+batch_size = lookback
 
 
 df = pd.read_csv('lorry_data.csv')
@@ -55,12 +56,14 @@ X_test, y_test = create_dataset(test, lookback=lookback)
 model = AirModel(input_dim=input_dim, hidden_dim=hidden_dim, num_layers=num_layers, bidirectional=bidirectional, dense=dense).to(device)
 optimizer = optim.Adam(model.parameters())
 loss_fn = nn.MSELoss()
-loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=8)
+loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=batch_size)
 
-training = False
+train_loss = []
+
+training = True
 
 if training:
-    n_epochs = 2000
+    n_epochs = 2
     for epoch in tqdm(range(n_epochs)):
         model.train()
         for X_batch, y_batch in loader:
@@ -75,12 +78,14 @@ if training:
         model.eval()
         with torch.no_grad():
             y_pred = model(X_train.to(device))
+            print(y_pred.shape)
+            print(y_train.shape)
             train_rmse = np.sqrt(loss_fn(y_pred.to(device), y_train.to(device)))
             y_pred = model(X_test.to(device))
             test_rmse = np.sqrt(loss_fn(y_pred.to(device), y_test.to(device)))
         print("Epoch %d: train RMSE %.4f, test RMSE %.4f" % (epoch, train_rmse, test_rmse))
 
-model = torch.load('ltsm.pt')
+#model = torch.load('ltsm.pt')
 model.to(device)
 model.eval()
 with torch.no_grad():
