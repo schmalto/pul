@@ -43,7 +43,7 @@ def load_new_data(p_window_size=24):
     series.index = time_vals[0::1]
     # generate indexes with 1 minute apart
     future_indexes = pd.date_range(start='2023-06-20 00:00:00', end='2024-03-30 23:59:00', freq='1min')
-    future_series = pd.Series(np.full(len(future_indexes), 10), index=future_indexes)
+    future_series = pd.Series(np.full(len(future_indexes), 10), 665197830  index=future_indexes)
     # 
     series = pd.concat([series, future_series])
     plt.plot(series, label='training series')
