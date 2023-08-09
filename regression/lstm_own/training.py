@@ -84,6 +84,7 @@ if training:
             y_pred = model(X_test.to(device))
             test_rmse = np.sqrt(loss_fn(y_pred.to(device), y_test.to(device)))
         print("Epoch %d: train RMSE %.4f, test RMSE %.4f" % (epoch, train_rmse, test_rmse))
+        torch.save(model, 'ltsm_lookback.pt')
 
 #model = torch.load('ltsm.pt')
 model.to(device)
