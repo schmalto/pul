@@ -3,6 +3,7 @@ import torch.optim as optim
 import torch
 from tqdm import tqdm
 import numpy as np
+import psutil
 
 
 class AirModel(nn.Module):
@@ -59,18 +60,20 @@ class AirModel(nn.Module):
                 for param in self.parameters():  # https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html
                     param.grad = None
                 self.optimizer.step()
+            print("Used %f %% of RAM" % psutil.virtual_memory().percent)
+            torch.save(self, 'ltsm_last.pt')
+            np.save('train_loss.npy', train_loss)
             # Validation
             if epoch % 100 != 0:
                 continue
             self.eval()
             with torch.no_grad():
-                y_pred = self(X_train.to(device))
-                train_rmse = np.sqrt(self.loss_fn(y_pred.to(device), y_train.to(device)).detach().cpu().numpy())
+                # y_pred = self(X_train.to(device))
+                # train_rmse = np.sqrt(self.loss_fn(y_pred.to(device), y_train.to(device)).detach().cpu().numpy())
                 y_pred = self(X_test.to(device))
                 test_rmse = np.sqrt(self.loss_fn(y_pred.to(device), y_test.to(device)).detach().cpu().numpy())
                 if test_rmse < np.min(test_loss, initial=np.inf):
                     torch.save(self, 'ltsm_best.pt')
                 test_loss.append(test_rmse)
-
+                np.save('test_loss.npy', test_loss)
             print("Epoch %d: train RMSE %.4f, test RMSE %.4f" % (epoch, train_rmse, test_rmse))
-            torch.save(self, 'ltsm_last.pt')
