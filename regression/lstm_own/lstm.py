@@ -41,7 +41,7 @@ class AirModel(nn.Module):
         x = self.final(x)
         return x
 
-    def training_2(self, device, dataset, loader, n_epochs=1000):
+    def model_training(self, device, dataset, loader, n_epochs=1000):
         test_loss = []
         train_loss = []
         X_train = dataset[0]
@@ -66,7 +66,7 @@ class AirModel(nn.Module):
                 train_rmse = np.sqrt(self.loss_fn(y_pred.to(device), y_train.to(device)).detach().cpu().numpy())
                 y_pred = self(X_test.to(device))
                 test_rmse = np.sqrt(self.loss_fn(y_pred.to(device), y_test.to(device)).detach().cpu().numpy())
-                if test_rmse < np.min(test_loss, default=np.inf):
+                if test_rmse < np.min(test_loss, initial=np.inf):
                     torch.save(self, 'ltsm_best.pt')
                 test_loss.append(test_rmse)
 

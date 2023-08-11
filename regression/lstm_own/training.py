@@ -59,7 +59,7 @@ def train_model(n_epochs, dataset, device, input_dim, hidden_dim, num_layers, bi
     X_train, y_train, _, _ = dataset
     loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=input_dim)
 
-    model_y.training_2(device, dataset, loader, n_epochs=n_epochs)
+    model_y.model_training(device, dataset, loader, n_epochs=n_epochs)
 
 
 def evaluate_model(p_dataset, p_device, p_train_size, p_lookback, p_timeseries):
