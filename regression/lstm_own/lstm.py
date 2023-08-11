@@ -54,9 +54,10 @@ class AirModel(nn.Module):
                 y_pred = self(X_batch.to(device))
                 loss = self.loss_fn(y_pred.detach().cpu(), y_batch.detach().cpu())
                 train_loss.append(loss.detach().cpu())
-                loss.backward()
+
                 for param in self.parameters():  # https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html
                     param.grad = None
+                loss.backward()
                 self.optimizer.step()
             # Validation
             if epoch % 100 != 0:
