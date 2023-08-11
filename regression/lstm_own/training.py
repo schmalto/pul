@@ -128,9 +128,8 @@ if __name__ == '__main__':
     num_layers = 1
     bidirectional = True
     dense = True
-    input_dim = 1
+    input_dim, batch_size = lookback
     n_epochs = 10000
-    batch_size = lookback
 
     dataset, train_size, test_size, timeseries = load_dataset(lookback)
     train_model(n_epochs, dataset, device, batch_size, input_dim, hidden_dim, num_layers, bidirectional, dense)
