@@ -55,11 +55,13 @@ class AirModel(nn.Module):
                 y_pred = self(X_batch.to(device))
                 loss = self.loss_fn(y_pred.cpu(), y_batch.cpu())
                 loss.backward()
-                train_loss.append(loss.detach().cpu())
+                train_loss.append(loss.detach())
 
                 for param in self.parameters():  # https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html
                     param.grad = None
                 self.optimizer.step()
+                del loss
+                del y_pred
             print("Used %f %% of RAM" % psutil.virtual_memory().percent)
             torch.save(self, 'ltsm_last.pt')
             np.save('train_loss.npy', train_loss)
@@ -74,6 +76,6 @@ class AirModel(nn.Module):
                 test_rmse = np.sqrt(self.loss_fn(y_pred.to(device), y_test.to(device)).detach().cpu().numpy())
                 if test_rmse < np.min(test_loss, initial=np.inf):
                     torch.save(self, 'ltsm_best.pt')
-                test_loss.append(test_rmse)
+                test_loss.append(test_rmse.detach())
                 np.save('test_loss.npy', test_loss)
             print("Epoch %d: test RMSE %.4f" % (epoch, test_rmse))
