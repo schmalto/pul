@@ -55,7 +55,7 @@ class AirModel(nn.Module):
                 y_pred = self(X_batch.to(device))
                 loss = self.loss_fn(y_pred.cpu(), y_batch.cpu())
                 loss.backward()
-                train_loss.append(loss.detach())
+                #train_loss.append(loss.detach())
 
                 for param in self.parameters():  # https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html
                     param.grad = None
@@ -64,7 +64,7 @@ class AirModel(nn.Module):
                 del y_pred
             print("Used %f %% of RAM" % psutil.virtual_memory().percent)
             torch.save(self, 'ltsm_last.pt')
-            np.save('train_loss.npy', train_loss)
+            #np.save('train_loss.npy', train_loss)
             # Validation
             if epoch % 100 != 0:
                 continue
