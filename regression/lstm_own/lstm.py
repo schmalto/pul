@@ -76,4 +76,4 @@ class AirModel(nn.Module):
                     torch.save(self, 'ltsm_best.pt')
                 test_loss.append(test_rmse)
                 np.save('test_loss.npy', test_loss)
-            print("Epoch %d: train RMSE %.4f, test RMSE %.4f" % (epoch, train_rmse, test_rmse))
+            print("Epoch %d: test RMSE %.4f" % (epoch, test_rmse))
