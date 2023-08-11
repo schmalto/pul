@@ -51,11 +51,12 @@ class AirModel(nn.Module):
         for epoch in tqdm(range(n_epochs)):
             self.train()
             for X_batch, y_batch in loader:
-                self.optimizer.zero_grad()
                 y_pred = self(X_batch.to(device))
-                loss = self.loss_fn(y_pred.to(device), y_batch.to(device))
-                train_loss.append(loss)
+                loss = self.loss_fn(y_pred.detach().cpu(), y_batch.detach().cpu())
+                train_loss.append(loss.detach().cpu())
                 loss.backward()
+                for param in self.parameters():  # https://pytorch.org/tutorials/recipes/recipes/tuning_guide.html
+                    param.grad = None
                 self.optimizer.step()
             # Validation
             if epoch % 100 != 0:
