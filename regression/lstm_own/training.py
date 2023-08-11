@@ -53,11 +53,11 @@ def create_dataset(dataset, lookback):
     return torch.tensor(X), torch.tensor(y)
 
 
-def train_model(n_epochs, dataset, device, batch_size, input_dim, hidden_dim, num_layers, bidirectional, dense):
+def train_model(n_epochs, dataset, device, input_dim, hidden_dim, num_layers, bidirectional, dense):
     model_y = AirModel(input_dim=input_dim, hidden_dim=hidden_dim, num_layers=num_layers, bidirectional=bidirectional,
                      dense=dense).to(device)
     X_train, y_train, _, _ = dataset
-    loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=batch_size)
+    loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=input_dim)
 
     model_y.training_2(device, dataset, loader, n_epochs=n_epochs)
 
@@ -128,10 +128,10 @@ if __name__ == '__main__':
     num_layers = 1
     bidirectional = True
     dense = True
-    input_dim, batch_size = lookback
+    input_dim = lookback
     n_epochs = 10000
 
     dataset, train_size, test_size, timeseries = load_dataset(lookback)
-    train_model(n_epochs, dataset, device, batch_size, input_dim, hidden_dim, num_layers, bidirectional, dense)
+    train_model(n_epochs, dataset, device, input_dim, hidden_dim, num_layers, bidirectional, dense)
     evaluate_model(dataset, device, train_size, lookback, timeseries)
     predict(device, 60, dataset, timeseries)
