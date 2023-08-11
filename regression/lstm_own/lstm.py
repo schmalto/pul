@@ -63,10 +63,10 @@ class AirModel(nn.Module):
             self.eval()
             with torch.no_grad():
                 y_pred = self(X_train.to(device))
-                train_rmse = np.sqrt(self.loss_fn(y_pred.to(device), y_train.to(device)))
+                train_rmse = np.sqrt(self.loss_fn(y_pred.to(device), y_train.to(device)).detach().cpu().numpy())
                 y_pred = self(X_test.to(device))
-                test_rmse = np.sqrt(self.loss_fn(y_pred.to(device), y_test.to(device)))
-                if test_rmse < min(test_loss):
+                test_rmse = np.sqrt(self.loss_fn(y_pred.to(device), y_test.to(device)).detach().cpu().numpy())
+                if test_rmse < np.min(test_loss):
                     torch.save(self, 'ltsm_best.pt')
                 test_loss.append(test_rmse)
 
