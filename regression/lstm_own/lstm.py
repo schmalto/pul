@@ -52,7 +52,7 @@ class AirModel(nn.Module):
             self.train()
             for X_batch, y_batch in loader:
                 y_pred = self(X_batch.to(device))
-                loss = self.loss_fn(y_pred.detach().cpu(), y_batch.detach().cpu())
+                loss = self.loss_fn(y_pred.cpu(), y_batch.cpu())
                 loss.backward()
                 train_loss.append(loss.detach().cpu())
 
