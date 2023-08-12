@@ -62,7 +62,7 @@ class AirModel(nn.Module):
                 self.optimizer.step()
                 del loss
                 del y_pred
-            print("Used %f %% of RAM" % psutil.virtual_memory().percent)
+            #print("Used %.4f %% of RAM" % psutil.virtual_memory().percent)
             torch.save(self, 'ltsm_last.pt')
             np.save('train_loss.npy', train_loss)
             # Validation
