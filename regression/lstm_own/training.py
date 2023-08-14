@@ -65,7 +65,7 @@ def train_model(n_epochs, dataset, device, input_dim, hidden_dim, num_layers, bi
 def evaluate_model(p_dataset, p_device, p_train_size, p_lookback, p_timeseries):
     X_train = p_dataset[0]
     X_test = p_dataset[2]
-    model = torch.load('ltsm.pt')
+    model = torch.load('ltsm_best.pt')
     model.to(p_device)
     model.eval()
     with torch.no_grad():
@@ -85,53 +85,59 @@ def evaluate_model(p_dataset, p_device, p_train_size, p_lookback, p_timeseries):
         plt.savefig('eval.png')
 
 
-def predict(device, prediction_minutes, dataset, timeseries):
+def predict(device, prediction_minutes, dataset, timeseries, lookback):
     X_train = dataset[0]
     y_train = dataset[1]
     X_test = dataset[2]
-    y_test = dataset[3]
-    model = torch.load('ltsm.pt')
+    model = torch.load('ltsm_best.pt')
     # get last 20 values from test set
     n = days(31)
     test_values = X_test[-n:]
-
-    pred_plot = np.ones((len(timeseries) + len(test_values), 1)) * np.nan
-    test_values = torch.tensor(test_values).to(device)
-
+    pred_plot = np.ones((len(timeseries) + prediction_minutes, 1)) * np.nan
+    test_values = np.take(test_values, 0, axis=1).reshape(-1, 1)
     for _ in tqdm(range(prediction_minutes)):
         with torch.no_grad():
-            y_pred = model(test_values.to(device))
-
+            y_pred = model(test_values[-lookback:, :].to(device))
             try:
-                y_pred = y_pred[-lookback]
+                y_pred = y_pred[-lookback:, :]
+                y_pred = torch.transpose(y_pred, 0, 1)
             except IndexError:
+                print("-------------------")
                 print(y_pred.shape)
                 print(test_values.shape)
+                print("-------------------")
 
-            y_pred = y_pred[:, None, None]
-            torch.cat((test_values, y_pred), dim=0)
-            test_values = test_values[0:, :, :]
-
+            test_values = torch.cat((test_values.cpu(), y_pred.cpu()), dim=0)
+            test_values = test_values[0:, :]
     np.save('predictions.npy', torch.Tensor.cpu(test_values).numpy())
-    pred_plot[len(timeseries):] = np.squeeze(torch.Tensor.cpu(test_values).numpy(), axis=2)
+    test_values = np.load('predictions.npy')
+    test_values = np.take(test_values, 0, axis=1).reshape(-1, 1)
+    test_values = test_values * 28
+    print(test_values[prediction_minutes:].shape)
+    print(pred_plot[len(timeseries):].shape)
+    pred_plot[len(timeseries):] = test_values[prediction_minutes:]
+    # pred_plot[len(timeseries):] = torch.Tensor.cpu(test_values).numpy()
 
     # plot
     plt.plot(timeseries, c='b')
     plt.plot(pred_plot, c='g')
+    plt.xlabel('Time in minutes since 10.06.2022 14:58')
+    plt.ylabel('Lorry free')
+    #plt.show()
     plt.savefig('predict.png')
 
 
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    lookback = days(1)
+    lookback = weeks(1)
     hidden_dim = 16
     num_layers = 1
     bidirectional = True
     dense = True
     input_dim = lookback
     n_epochs = 10000
-
+    prediction_minutes = days(31)
     dataset, train_size, test_size, timeseries = load_dataset(lookback)
     train_model(n_epochs, dataset, device, input_dim, hidden_dim, num_layers, bidirectional, dense)
     evaluate_model(dataset, device, train_size, lookback, timeseries)
-    predict(device, 60, dataset, timeseries)
+    predict(device,prediction_minutes, dataset, timeseries, lookback)

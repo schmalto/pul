@@ -173,3 +173,4 @@ val_images/
 *.pt
 runs/
 models/
+*.npy
