@@ -6,7 +6,7 @@ import numpy as np
 import psutil
 
 
-class AirModel(nn.Module):
+class LSTM_Model(nn.Module):
 
     def __init__(self, input_dim=1, hidden_dim=50, num_layers=1, bidirectional=True, dense=True):
         super().__init__()

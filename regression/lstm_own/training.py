@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import torch
 import numpy as np
-from lstm import AirModel
+from lstm import LSTM_Model
 import torch.utils.data as data
 from tqdm import tqdm
 from lstm_utils import weeks, days, hours, months
@@ -15,6 +15,9 @@ def load_dataset(lookback):
     mask = np.ones_like(timeseries, dtype=bool)
     mask[101700:242500] = False
     timeseries = timeseries[mask]
+    index = np.argwhere(timeseries==0)
+    timeseries = np.delete(timeseries, index)
+    timeseries = timeseries[:214600]
     # plt.xlabel('Time in minutes since 10.06.2022 14:58')
     # plt.ylabel('Lorry free')
     # plt.plot(timeseries)
@@ -52,9 +55,19 @@ def create_dataset(dataset, lookback):
     y = y / 28
     return torch.tensor(X), torch.tensor(y)
 
+def plot_pred():
+    test_values = np.load('predictions.npy')
+    test_values = np.take(test_values, 0, axis=1).reshape(-1, 1)
+    time_s = np.arange(0, len(test_values), 1, dtype=float)
+    time_s = time_s / 10080
+    plt.plot(time_s,test_values, c='g')
+    plt.xlabel('Zeit in Wochen seit 19.06.2023 15:19')
+    plt.ylabel('Freie Parkplätze (relativ zur Größe)')
+    plt.savefig('predict.png')
+
 
 def train_model(n_epochs, dataset, device, input_dim, hidden_dim, num_layers, bidirectional, dense):
-    model_y = AirModel(input_dim=input_dim, hidden_dim=hidden_dim, num_layers=num_layers, bidirectional=bidirectional,
+    model_y = LSTM_Model(input_dim=input_dim, hidden_dim=hidden_dim, num_layers=num_layers, bidirectional=bidirectional,
                      dense=dense).to(device)
     X_train, y_train, _, _ = dataset
     loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=True, batch_size=input_dim)
@@ -72,17 +85,18 @@ def evaluate_model(p_dataset, p_device, p_train_size, p_lookback, p_timeseries):
         # shift train predictions for plotting
         train_plot = np.ones_like(p_timeseries) * np.nan
         y_pred = model(X_train.to(p_device))
-        train_plot[p_lookback:p_train_size] = torch.Tensor.cpu(y_pred).numpy()
+        train_plot[p_lookback:p_train_size] = torch.Tensor.cpu(y_pred).numpy().squeeze()
 
         # shift test predictions for plotting
         test_plot = np.ones_like(p_timeseries) * np.nan
         y_pred_test = model(X_test.to(p_device))
-        test_plot[train_size + lookback:len(p_timeseries)] = torch.Tensor.cpu(y_pred_test).numpy()
-
-        plt.plot(p_timeseries, c='b')
-        plt.plot(train_plot, c='r')
-        plt.plot(test_plot, c='g')
-        plt.savefig('eval.png')
+        test_plot[train_size + lookback:len(p_timeseries)] = torch.Tensor.cpu(y_pred_test).numpy().squeeze()
+        p_timeseries = p_timeseries / 28
+        train_plot = train_plot * 3
+        test_plot = test_plot * 3
+        np.save('train_plot.npy', train_plot)
+        np.save('test_plot.npy', test_plot)
+        
 
 
 def predict(device, prediction_minutes, dataset, timeseries, lookback):
@@ -90,14 +104,16 @@ def predict(device, prediction_minutes, dataset, timeseries, lookback):
     y_train = dataset[1]
     X_test = dataset[2]
     model = torch.load('ltsm_best.pt')
+    model.to(device)
+    model.eval()
     # get last 20 values from test set
     n = days(31)
     test_values = X_test[-n:]
     pred_plot = np.ones((len(timeseries) + prediction_minutes, 1)) * np.nan
-    test_values = np.take(test_values, 0, axis=1).reshape(-1, 1)
+    #test_values = np.take(test_values, 0, axis=1)#.reshape(-1, 1)
     for _ in tqdm(range(prediction_minutes)):
         with torch.no_grad():
-            y_pred = model(test_values[-lookback:, :].to(device))
+            y_pred = model(test_values[-lookback:].to(device))
             try:
                 y_pred = y_pred[-lookback:, :]
                 y_pred = torch.transpose(y_pred, 0, 1)
@@ -110,34 +126,40 @@ def predict(device, prediction_minutes, dataset, timeseries, lookback):
             test_values = torch.cat((test_values.cpu(), y_pred.cpu()), dim=0)
             test_values = test_values[0:, :]
     np.save('predictions.npy', torch.Tensor.cpu(test_values).numpy())
-    test_values = np.load('predictions.npy')
-    test_values = np.take(test_values, 0, axis=1).reshape(-1, 1)
-    test_values = test_values * 28
-    print(test_values[prediction_minutes:].shape)
-    print(pred_plot[len(timeseries):].shape)
-    pred_plot[len(timeseries):] = test_values[prediction_minutes:]
-    # pred_plot[len(timeseries):] = torch.Tensor.cpu(test_values).numpy()
 
-    # plot
-    plt.plot(timeseries, c='b')
-    plt.plot(pred_plot, c='g')
-    plt.xlabel('Time in minutes since 10.06.2022 14:58')
-    plt.ylabel('Lorry free')
-    #plt.show()
-    plt.savefig('predict.png')
+
+def plot_eval(p_timeseries):
+    
+    train_plot  = np.load('train_plot.npy')
+    test_plot = np.load('test_plot.npy')
+   
+    time_s = np.arange(0,len(p_timeseries), 1, dtype=float)
+    time_s = time_s / 10080
+
+    plt.plot(time_s,p_timeseries, c='b', label="Zeitreihe aus Daten")
+    plt.plot(time_s,train_plot, c='r', label="Testzeitreihe")
+    plt.plot(time_s,test_plot, c='g', label="Validationzeitreihe")
+    plt.legend()
+    plt.xlabel('Zeit in Wochen seit 10.06.2022 14:58')
+    plt.ylabel('Freie Parkplätze (relativ zur Größe)')
+    plt.savefig('eval.png')
+    
+    
 
 
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    lookback = weeks(1)
+    lookback = days(2)    
     hidden_dim = 16
     num_layers = 1
     bidirectional = True
     dense = True
     input_dim = lookback
-    n_epochs = 10000
+    n_epochs = 100000
     prediction_minutes = days(31)
     dataset, train_size, test_size, timeseries = load_dataset(lookback)
     train_model(n_epochs, dataset, device, input_dim, hidden_dim, num_layers, bidirectional, dense)
     evaluate_model(dataset, device, train_size, lookback, timeseries)
     predict(device,prediction_minutes, dataset, timeseries, lookback)
+    #plot_eval(timeseries)
+    #plot_pred()
