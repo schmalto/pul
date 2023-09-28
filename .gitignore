@@ -162,15 +162,7 @@ cython_debug/
 
 logs/
 .logs/
-model_testing/
-image_conversion/
 example_set/
 example_datasets/
-**/*.pt
-**/*.pt
-runs/models/
-val_images/
-*.pt
-runs/
-models/
-*.npy
+**/**.pt
+runs.zip
